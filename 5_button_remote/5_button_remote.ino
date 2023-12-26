@@ -8,8 +8,8 @@ int okunan_deger  = 0;
 bool button = true;
 const uint16_t IRLed = 14;
 IRGreeAC ac(IRLed);
-int temp = 25;
-int fan = 0;
+uint8_t temp = 25;
+uint8_t fan = 0;
 int analogValue = 0;
 #define right     0
 #define up  1
@@ -51,7 +51,7 @@ byte buttonPress()
     return none; 
 }
 
-void tempset(int value) {
+void tempset(uint8_t value) {
   temp = temp + value;
   if(temp > 30) {
     temp = 30;
@@ -59,16 +59,18 @@ void tempset(int value) {
     temp = 16;
   }
   ac.setTemp(temp);
+  ac.send();
 }
 
-void fanset(int value) {
+void fanset(uint8_t value) {
   fan = fan + value;
   if(fan > 3) {
     fan= 3;
   } else if (fan < 0) {
     fan = 0;
   }
-  ac.setTemp(fan);
+  ac.setFan(fan);
+  ac.send();
 }
 
 void onOFF() {
@@ -78,12 +80,14 @@ void onOFF() {
   if (buttonPress() == select){
     button = !button;
     if(!button) {
-      ac.off();
-    } else {
       ac.on();
+      ac.send();
+    } else {
+      ac.off();
+      ac.send();
     }
-    delay(1000);
   }
+  delay(100);
   
   
 }
@@ -99,6 +103,10 @@ void setup()
   Serial.println("Default state of the remote.");
   printState();
   Serial.println("Setting desired state for A/C.");
+  ac.setFan(0);
+  // kGreeAuto, kGreeDry, kGreeCool, kGreeFan, kGreeHeat
+  ac.setMode(kGreeHeat);
+  ac.setTemp(temp);  // 16-30C
   ac.setSwingVertical(false, kGreeSwingAuto);
   ac.setXFan(false);
   ac.setLight(true);
@@ -129,9 +137,8 @@ void loop()
     break;
   }
   printState();
-  delay(1000);
   Serial.println(temp);
   Serial.println(fan);
   Serial.println(button);
-  delay(500);
+  delay(10);
   }
